@@ -545,44 +545,41 @@ if (tasks.length === 0) {
 }
 </script>
 
-<!-- 安装提示横幅 -->
-<div id="installBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:2px solid #ffb74d; padding:14px 18px; z-index:9999; display:flex; align-items:center; gap:12px; box-shadow:0 -4px 16px rgba(0,0,0,0.1); font-family:inherit;">
-  <span style="font-size:22px;">📋</span>
-  <div style="flex:1;">
-    <div style="font-weight:700;font-size:15px;color:#333;">添加到桌面</div>
-    <div style="font-size:12px;color:#999;">像 App 一样快速打开</div>
+<!-- 安装提示横幅：始终显示，点 ✕ 关闭 -->
+<div id="installBanner" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:3px solid #ffb74d;padding:12px 14px;z-index:9999;align-items:center;gap:10px;box-shadow:0 -4px 16px rgba(0,0,0,0.12);font-family:inherit;display:flex;">
+  <span style="font-size:20px;background:#fff8e1;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📋</span>
+  <div style="flex:1;min-width:0;">
+    <div style="font-weight:700;font-size:14px;color:#333;">加到手机桌面</div>
+    <div id="installHint" style="font-size:11px;color:#999;">点击浏览器菜单 →「添加到主屏幕」</div>
   </div>
-  <button onclick="document.getElementById('installBanner').style.display='none'" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;">✕</button>
-  <button id="installBtn" onclick="installApp()" style="background:#ffb74d;color:#fff;border:none;padding:10px 18px;border-radius:20px;font-weight:600;font-size:14px;cursor:pointer;">安装</button>
+  <span onclick="document.getElementById('installBanner').style.display='none'" style="font-size:20px;color:#ccc;cursor:pointer;padding:4px;">✕</span>
 </div>
 
 <script>
-// 注册 Service Worker（PWA 安装必需）
+// 注册 Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/taskboard/sw.js');
 }
 
-// 安装提示
-let installPrompt = null;
+// 监听 Chrome 原生安装事件，若触发则更新横幅文案
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
-  installPrompt = e;
-  document.getElementById('installBanner').style.display = 'flex';
-});
-function installApp() {
-  if (installPrompt) {
-    installPrompt.prompt();
-    installPrompt.userChoice.then(function(result) {
-      document.getElementById('installBanner').style.display = 'none';
-      installPrompt = null;
+  window.__pwaPrompt = e;
+  var hint = document.getElementById('installHint');
+  if (hint) hint.textContent = '点右边按钮一键安装到桌面';
+  // 添加安装按钮
+  var bar = document.getElementById('installBanner');
+  var btn = document.createElement('span');
+  btn.id = 'pwaInstallBtn';
+  btn.textContent = '安装';
+  btn.style.cssText = 'background:#ffb74d;color:#fff;border:none;padding:8px 16px;border-radius:16px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;';
+  btn.onclick = function(){
+    window.__pwaPrompt.prompt();
+    window.__pwaPrompt.userChoice.then(function(r){
+      if(r.outcome==='accepted') bar.style.display='none';
     });
-  } else {
-    alert('请点击浏览器菜单中的「添加到主屏幕」');
-  }
-}
-// 已安装则隐藏
-window.addEventListener('appinstalled', function() {
-  document.getElementById('installBanner').style.display = 'none';
+  };
+  bar.appendChild(btn);
 });
 </script>
 

@@ -1,0 +1,22 @@
+{
+  "name": "任务看板",
+  "short_name": "任务看板",
+  "description": "📋 简单的任务进度管理工具",
+  "start_url": "/taskboard/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f0e8",
+  "theme_color": "#ffb74d",
+  "icons": [
+    {
+      "src": "/taskboard/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/taskboard/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

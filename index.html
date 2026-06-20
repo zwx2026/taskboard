@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📋 任务看板</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    background: #f5f0e8;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255,217,102,0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(129,199,132,0.12) 0%, transparent 50%);
+    padding: 30px 20px;
+  }
+
+  /* ── 顶部 ── */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header h1 {
+    font-size: 28px;
+    color: #4a4a4a;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .add-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .add-bar input {
+    width: 420px;
+    max-width: 80vw;
+    padding: 12px 18px;
+    font-size: 16px;
+    border: 2px solid #e0d8cc;
+    border-radius: 12px;
+    outline: none;
+    background: #fffef9;
+    transition: border 0.2s;
+    font-family: inherit;
+  }
+  .add-bar input:focus {
+    border-color: #ffb74d;
+    box-shadow: 0 0 0 4px rgba(255,183,77,0.12);
+  }
+  .add-bar button {
+    padding: 12px 26px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #ffb74d;
+    color: #fff;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .add-bar button:hover {
+    background: #ffa726;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(255,167,38,0.3);
+  }
+
+  /* ── 双栏布局 ── */
+  .board {
+    display: flex;
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: flex-start;
+  }
+
+  @media (max-width: 750px) {
+    .board {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  /* ── 便签面板 ── */
+  .panel {
+    flex: 1;
+    min-width: 280px;
+    border-radius: 6px 6px 16px 6px;
+    box-shadow: 4px 5px 20px rgba(0,0,0,0.1), 1px 1px 3px rgba(0,0,0,0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+  }
+
+  .panel-head {
+    padding: 16px 20px;
+    font-size: 17px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-head .count {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.7;
+  }
+
+  /* 待完成 — 暖黄调 */
+  .panel-active {
+    background: #fffef7;
+    border: 1px solid #ede7d5;
+  }
+  .panel-active .panel-head {
+    background: #fff8e1;
+    color: #6d5b2e;
+    border-bottom: 1px solid #f0e4c6;
+  }
+
+  /* 已完成 — 浅绿调 */
+  .panel-done {
+    background: #fafff7;
+    border: 1px solid #dce8d5;
+  }
+  .panel-done .panel-head {
+    background: #e8f5e9;
+    color: #3e5c3a;
+    border-bottom: 1px solid #d0e2cc;
+  }
+
+  .panel-body {
+    padding: 12px 14px;
+    flex: 1;
+    min-height: 200px;
+  }
+
+  /* ── 空状态 ── */
+  .empty-hint {
+    text-align: center;
+    color: #ccc;
+    padding: 40px 10px;
+    font-size: 14px;
+    user-select: none;
+  }
+
+  /* ── 任务行 ── */
+  .task-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 10px;
+    transition: all 0.25s;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .task-row:hover {
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .task-num {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f5f0e8;
+    color: #999;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .task-text {
+    flex: 1;
+    font-size: 15px;
+    color: #444;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .panel-done .task-text {
+    text-decoration: line-through;
+    color: #aaa;
+  }
+
+  /* 按钮 */
+  .task-btn {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: #fff;
+  }
+
+  .btn-done {
+    color: #bbb;
+    border-color: #e0d8cc;
+  }
+  .btn-done:hover {
+    background: #43a047;
+    color: #fff;
+    border-color: #43a047;
+    transform: scale(1.08);
+    box-shadow: 0 3px 10px rgba(67,160,71,0.3);
+  }
+
+  .btn-restore {
+    color: #bbb;
+    border-color: #e0d8cc;
+  }
+  .btn-restore:hover {
+    background: #ffb74d;
+    color: #fff;
+    border-color: #ffb74d;
+    transform: scale(1.08);
+    box-shadow: 0 3px 10px rgba(255,183,77,0.3);
+  }
+
+  .btn-delete {
+    color: #ddd;
+    border-color: transparent;
+    font-size: 14px;
+  }
+  .btn-delete:hover {
+    background: #ef5350;
+    color: #fff;
+    border-color: #ef5350;
+    transform: scale(1.08);
+  }
+
+  /* ── 底部工具栏 ── */
+  .footer-bar {
+    text-align: center;
+    margin-top: 28px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .footer-bar button {
+    padding: 10px 20px;
+    font-size: 13px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    background: #fff;
+    color: #888;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .footer-bar button:hover {
+    background: #fafafa;
+    color: #555;
+    border-color: #bbb;
+  }
+  .footer-bar .btn-danger:hover {
+    background: #fff5f5;
+    color: #ef5350;
+    border-color: #ef5350;
+  }
+
+  /* ── 进度条 ── */
+  .progress-wrap {
+    max-width: 1100px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 4px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #e8e0d5;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #66bb6a;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-size: 13px;
+    color: #999;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 任务看板</h1>
+  <div class="add-bar">
+    <input type="text" id="taskInput" placeholder="输入新任务，按 Enter 添加…" maxlength="200">
+    <button onclick="addTask()">＋ 添加</button>
+  </div>
+</div>
+
+<div class="progress-wrap" id="progressArea">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <span class="progress-label" id="progressLabel">0/0</span>
+</div>
+
+<div class="board">
+  <!-- 待完成 -->
+  <div class="panel panel-active">
+    <div class="panel-head">📝 待完成 <span class="count" id="activeCount">0</span></div>
+    <div class="panel-body" id="activeList"></div>
+  </div>
+
+  <!-- 已完成 -->
+  <div class="panel panel-done">
+    <div class="panel-head">✅ 已完成 <span class="count" id="doneCount">0</span></div>
+    <div class="panel-body" id="doneList"></div>
+  </div>
+</div>
+
+<div class="footer-bar">
+  <button onclick="exportTasks()">📥 导出备份</button>
+  <button onclick="importTasks()">📤 导入恢复</button>
+  <button class="btn-danger" onclick="clearDone()">🗑 清空已完成</button>
+  <button class="btn-danger" onclick="clearAllTasks()">⚠ 全部清空</button>
+</div>
+
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script>
+const STORAGE_KEY = 'task_board_v1';
+
+let tasks = [];
+
+// ========== 存储 ==========
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) tasks = JSON.parse(raw);
+  } catch(e) { tasks = []; }
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+}
+
+// ========== 渲染 ==========
+function renderAll() {
+  const active = tasks.filter(t => !t.completed);
+  const done   = tasks.filter(t =>  t.completed);
+
+  // 待完成列表
+  const activeList = document.getElementById('activeList');
+  if (active.length === 0) {
+    activeList.innerHTML = '<div class="empty-hint">✨ 还没有任务<br>在上方输入框写下第一个任务吧</div>';
+  } else {
+    activeList.innerHTML = active.map((t, i) => `
+      <div class="task-row" data-id="${t.id}">
+        <span class="task-num">${i + 1}</span>
+        <span class="task-text">${escapeHtml(t.text)}</span>
+        <button class="task-btn btn-done" title="标记完成" onclick="completeTask(${t.id})">✓</button>
+      </div>
+    `).join('');
+  }
+
+  // 已完成列表
+  const doneList = document.getElementById('doneList');
+  if (done.length === 0) {
+    doneList.innerHTML = '<div class="empty-hint">📭 还没有已完成的任务</div>';
+  } else {
+    doneList.innerHTML = done.map(t => `
+      <div class="task-row" data-id="${t.id}">
+        <span class="task-num" style="background:#e8f5e9;color:#81c784;">✓</span>
+        <span class="task-text">${escapeHtml(t.text)}</span>
+        <button class="task-btn btn-restore" title="恢复任务" onclick="restoreTask(${t.id})">↩</button>
+        <button class="task-btn btn-delete" title="删除" onclick="deleteTask(${t.id})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  // 计数
+  document.getElementById('activeCount').textContent = active.length;
+  document.getElementById('doneCount').textContent = done.length;
+
+  // 进度条
+  const total = tasks.length;
+  const pct = total === 0 ? 0 : Math.round((done.length / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done.length}/${total} · ${pct}%`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ========== 操作 ==========
+function addTask(text) {
+  if (!text) {
+    text = document.getElementById('taskInput').value.trim();
+  }
+  if (!text) {
+    document.getElementById('taskInput').focus();
+    return;
+  }
+
+  tasks.push({
+    id: Date.now(),
+    text: text,
+    completed: false,
+    createdAt: Date.now(),
+    completedAt: null
+  });
+
+  document.getElementById('taskInput').value = '';
+  document.getElementById('taskInput').focus();
+  save();
+  renderAll();
+}
+
+function completeTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  task.completed = true;
+  task.completedAt = Date.now();
+  save();
+  renderAll();
+}
+
+function restoreTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  task.completed = false;
+  task.completedAt = null;
+  save();
+  renderAll();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  save();
+  renderAll();
+}
+
+function clearDone() {
+  const done = tasks.filter(t => t.completed);
+  if (done.length === 0) return;
+  if (!confirm(`确定要删除全部 ${done.length} 条已完成任务吗？`)) return;
+  tasks = tasks.filter(t => !t.completed);
+  save();
+  renderAll();
+}
+
+function clearAllTasks() {
+  if (tasks.length === 0) return;
+  if (!confirm(`确定要删除全部 ${tasks.length} 条任务吗？此操作不可恢复！`)) return;
+  tasks = [];
+  save();
+  renderAll();
+}
+
+// ========== 导出 / 导入 ==========
+function exportTasks() {
+  const data = JSON.stringify(tasks, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '任务备份_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importTasks() {
+  document.getElementById('importFile').click();
+}
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error('格式错误');
+      if (!confirm(`即将导入 ${data.length} 条任务，当前任务会被覆盖。确定继续？`)) return;
+      tasks = data;
+      save();
+      renderAll();
+    } catch(err) {
+      alert('文件格式错误，请选择正确的备份文件');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ========== 键盘 ==========
+document.getElementById('taskInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addTask();
+  }
+});
+
+// ========== 初始化 ==========
+load();
+renderAll();
+
+// 首次使用，放两条示例
+if (tasks.length === 0) {
+  tasks.push(
+    { id: Date.now(),       text: '👋 欢迎使用任务看板！点击右边的 ✓ 标记完成', completed: false, createdAt: Date.now(), completedAt: null },
+    { id: Date.now() + 100, text: '📝 这是一个示例任务，你可以删除我',           completed: false, createdAt: Date.now(), completedAt: null }
+  );
+  save();
+  renderAll();
+}
+</script>
+</body>
+</html>

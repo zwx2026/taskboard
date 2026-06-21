@@ -177,7 +177,8 @@
     cursor: grab;
     -webkit-user-select: none;
     user-select: none;
-    touch-action: none; /* 防止移动端页面滚动干扰 */
+    -webkit-touch-callout: none;
+    touch-action: none;
   }
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(-12px); }
@@ -562,13 +563,16 @@ function clearAllTasks() {
 }
 
 // ========== 自定义拖拽排序（桌面鼠标 + 移动端触屏统一） ==========
-let drag = null; // { id, el, clone, startX, startY, offX, offY, active }
+let drag = null;
+let lastTouchTime = 0; // 防止触屏后浏览器补发鼠标事件导致重影
 
 // ── 桌面鼠标拖拽 ──
 function onRowDown(e, el) {
+  // 触屏刚结束，忽略浏览器补发的鼠标事件
+  if (Date.now() - lastTouchTime < 400) return;
   // 不拦截按钮点击
   if (e.target.tagName === 'BUTTON') return;
-  if (e.button !== 0) return; // 只响应左键
+  if (e.button !== 0) return;
   e.preventDefault();
 
   const rect = el.getBoundingClientRect();
@@ -586,19 +590,22 @@ function onRowDown(e, el) {
 
 function onRowTouchStart(e, el) {
   if (e.target.tagName === 'BUTTON') return;
-  const touch = e.touches[0];
-  const rect = el.getBoundingClientRect();
+  var touch = e.touches[0];
+  // 阻止浏览器默认长按行为（放大镜/选择/菜单）
+  e.preventDefault();
+  var rect = el.getBoundingClientRect();
+  var cx = touch.clientX, cy = touch.clientY;
   drag = {
     id: parseInt(el.dataset.id),
     el: el,
     clone: null,
-    startX: touch.clientX,
-    startY: touch.clientY,
-    offX: touch.clientX - rect.left,
-    offY: touch.clientY - rect.top,
+    startX: cx,
+    startY: cy,
+    offX: cx - rect.left,
+    offY: cy - rect.top,
     active: false,
     touchTimer: setTimeout(function() {
-      activateDrag(touch.clientX, touch.clientY);
+      activateDrag(cx, cy);
     }, 500)
   };
 }
@@ -625,6 +632,7 @@ function onRowTouchEnd(e, el) {
   if (drag.touchTimer) clearTimeout(drag.touchTimer);
   if (!drag.active) { drag = null; return; }
 
+  lastTouchTime = Date.now();
   const touch = e.changedTouches[0];
   finishDrag(touch.clientX, touch.clientY);
 }
@@ -632,6 +640,8 @@ function onRowTouchEnd(e, el) {
 // ── 全局鼠标移动 ──
 document.addEventListener('mousemove', function(e) {
   if (!drag) return;
+  // 触屏刚结束，忽略浏览器补发的鼠标事件
+  if (Date.now() - lastTouchTime < 400) return;
 
   // 激活阈值
   if (!drag.active) {
@@ -645,6 +655,7 @@ document.addEventListener('mousemove', function(e) {
 // ── 全局鼠标松开 ──
 document.addEventListener('mouseup', function(e) {
   if (!drag) return;
+  if (Date.now() - lastTouchTime < 400) { drag = null; return; }
   if (!drag.active) { drag = null; return; }
   finishDrag(e.clientX, e.clientY);
 });

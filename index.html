@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- PWA: 添加到手机桌面 -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="任务看板">
@@ -23,12 +22,8 @@
       radial-gradient(circle at 20% 30%, rgba(255,217,102,0.15) 0%, transparent 50%),
       radial-gradient(circle at 80% 70%, rgba(129,199,132,0.12) 0%, transparent 50%);
     padding: 30px 20px;
-    /* 拖拽时禁止选中文字 */
-    -webkit-user-select: none;
-    user-select: none;
   }
 
-  /* ── 顶部 ── */
   .header {
     text-align: center;
     margin-bottom: 32px;
@@ -58,8 +53,6 @@
     background: #fffef9;
     transition: border 0.2s;
     font-family: inherit;
-    -webkit-user-select: text;
-    user-select: text;
   }
   .add-bar input:focus {
     border-color: #ffb74d;
@@ -76,8 +69,6 @@
     color: #fff;
     transition: all 0.2s;
     font-family: inherit;
-    -webkit-user-select: none;
-    user-select: none;
   }
   .add-bar button:hover {
     background: #ffa726;
@@ -85,7 +76,6 @@
     box-shadow: 0 4px 14px rgba(255,167,38,0.3);
   }
 
-  /* ── 双栏布局 ── */
   .board {
     display: flex;
     gap: 24px;
@@ -101,7 +91,6 @@
     }
   }
 
-  /* ── 便签面板 ── */
   .panel {
     flex: 1;
     min-width: 280px;
@@ -127,7 +116,6 @@
     opacity: 0.7;
   }
 
-  /* 待完成 — 暖黄调 */
   .panel-active {
     background: #fffef7;
     border: 1px solid #ede7d5;
@@ -138,7 +126,6 @@
     border-bottom: 1px solid #f0e4c6;
   }
 
-  /* 已完成 — 浅绿调 */
   .panel-done {
     background: #fafff7;
     border: 1px solid #dce8d5;
@@ -155,7 +142,6 @@
     min-height: 200px;
   }
 
-  /* ── 空状态 ── */
   .empty-hint {
     text-align: center;
     color: #ccc;
@@ -174,11 +160,6 @@
     border-radius: 10px;
     transition: all 0.25s;
     animation: slideIn 0.3s ease;
-    cursor: grab;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-    touch-action: none;
   }
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(-12px); }
@@ -187,6 +168,22 @@
   .task-row:hover {
     background: rgba(255,255,255,0.95);
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  /* 置顶任务样式 */
+  .task-row.pinned {
+    background: linear-gradient(135deg, #fff8e1, #ffecb3);
+    border-left: 3px solid #ffb74d;
+    box-shadow: 0 1px 4px rgba(255,167,38,0.15);
+  }
+  .task-row.pinned .task-text {
+    font-weight: 700;
+    color: #4e342e;
+  }
+  .task-row.pinned .task-num {
+    background: #ffb74d;
+    color: #fff;
+    font-weight: 800;
   }
 
   .task-num {
@@ -201,7 +198,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    pointer-events: none;
   }
 
   .task-text {
@@ -210,7 +206,6 @@
     color: #444;
     line-height: 1.5;
     word-break: break-word;
-    pointer-events: none;
   }
   .panel-done .task-text {
     text-decoration: line-through;
@@ -231,10 +226,28 @@
     justify-content: center;
     transition: all 0.2s;
     background: #fff;
-    /* 按钮恢复可交互 */
-    pointer-events: auto;
-    -webkit-user-select: none;
-    user-select: none;
+  }
+
+  .btn-pin {
+    color: #ccc;
+    border-color: transparent;
+    font-size: 15px;
+  }
+  .btn-pin:hover {
+    background: #ffb74d;
+    color: #fff;
+    border-color: #ffb74d;
+    transform: scale(1.1);
+  }
+  .btn-pin.is-pinned {
+    color: #ff8f00;
+    background: #fff8e1;
+    border-color: #ffb74d;
+  }
+  .btn-pin.is-pinned:hover {
+    background: #e0e0e0;
+    color: #888;
+    border-color: #ccc;
   }
 
   .btn-done {
@@ -271,55 +284,6 @@
     color: #fff;
     border-color: #ef5350;
     transform: scale(1.08);
-  }
-
-  /* ── 拖拽排序视觉 ── */
-  body.is-dragging .task-row {
-    cursor: grabbing;
-  }
-  .task-row.dragging {
-    opacity: 0.4;
-    background: rgba(255,255,255,0.4);
-    box-shadow: inset 3px 0 0 #ffb74d;
-  }
-  .task-row.drag-over {
-    border: 2px dashed #ffb74d;
-    background: rgba(255,183,77,0.12);
-    transform: scale(1.02);
-  }
-  .drag-clone {
-    position: fixed;
-    z-index: 9999;
-    pointer-events: none;
-    opacity: 0.93;
-    transform: rotate(1.5deg) scale(1.03);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-    border-radius: 10px;
-    background: #fffef7;
-  }
-  .longpress-hint {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.75);
-    color: #fff;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-size: 13px;
-    z-index: 9998;
-    animation: fadeInOut 2s ease forwards;
-    pointer-events: none;
-  }
-  @keyframes fadeInOut {
-    0%   { opacity: 0; transform: translateX(-50%) translateY(10px); }
-    15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
-    80%  { opacity: 1; }
-    100% { opacity: 0; }
-  }
-  @keyframes slideDown {
-    from { transform: translateY(-100%); }
-    to   { transform: translateY(0); }
   }
 
   /* ── 底部工具栏 ── */
@@ -386,7 +350,6 @@
 
 <div class="header">
   <h1>📋 任务看板</h1>
-  <!-- 安装到桌面按钮 -->
   <div id="installBox" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:20px;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;font-size:14px;color:#555;" onclick="installOrGuide()">
     <span style="font-size:18px;">📲</span>
     <span id="installBoxText">添加到手机桌面</span>
@@ -403,13 +366,11 @@
 </div>
 
 <div class="board">
-  <!-- 待完成 -->
   <div class="panel panel-active">
     <div class="panel-head">📝 待完成 <span class="count" id="activeCount">0</span></div>
     <div class="panel-body" id="activeList"></div>
   </div>
 
-  <!-- 已完成 -->
   <div class="panel panel-done">
     <div class="panel-head">✅ 已完成 <span class="count" id="doneCount">0</span></div>
     <div class="panel-body" id="doneList"></div>
@@ -426,11 +387,10 @@
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
-const STORAGE_KEY = 'task_board_v2';
+const STORAGE_KEY = 'task_board_v3';
 
 let tasks = [];
 
-// ========== 存储 ==========
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -443,74 +403,73 @@ function save() {
 
 // ========== 渲染 ==========
 function renderAll() {
-  const active = tasks.filter(t => !t.completed);
-  const done   = tasks.filter(t =>  t.completed);
+  var active = tasks.filter(function(t) { return !t.completed; });
+  var done   = tasks.filter(function(t) { return  t.completed; });
 
-  // 待完成列表
-  const activeList = document.getElementById('activeList');
-  if (active.length === 0) {
+  // 待完成：置顶在前（最近置顶靠前），非置顶在后
+  var pinned = active.filter(function(t) { return t.pinned; });
+  var unpinned = active.filter(function(t) { return !t.pinned; });
+  pinned.sort(function(a, b) { return (b.pinnedAt || 0) - (a.pinnedAt || 0); });
+  var sortedActive = pinned.concat(unpinned);
+
+  var activeList = document.getElementById('activeList');
+  if (sortedActive.length === 0) {
     activeList.innerHTML = '<div class="empty-hint">✨ 还没有任务<br>在上方输入框写下第一个任务吧</div>';
   } else {
-    activeList.innerHTML = active.map((t, i) => `
-      <div class="task-row" data-id="${t.id}"
-           onmousedown="onRowDown(event,this)"
-           ontouchstart="onRowTouchStart(event,this)"
-           ontouchmove="onRowTouchMove(event,this)"
-           ontouchend="onRowTouchEnd(event,this)">
-        <span class="task-num">${i + 1}</span>
-        <span class="task-text">${escapeHtml(t.text)}</span>
-        <button class="task-btn btn-done" title="标记完成" onclick="completeTask(${t.id})">✓</button>
-        <button class="task-btn btn-delete" title="删除任务" onclick="deleteTask(${t.id})">✕</button>
-      </div>
-    `).join('');
+    activeList.innerHTML = sortedActive.map(function(t, i) {
+      var pinnedClass = t.pinned ? ' pinned' : '';
+      var pinBtnClass = t.pinned ? ' is-pinned' : '';
+      var pinTitle = t.pinned ? '取消置顶' : '置顶';
+      return '<div class="task-row' + pinnedClass + '" data-id="' + t.id + '">' +
+        '<span class="task-num">' + (i + 1) + '</span>' +
+        '<span class="task-text">' + escapeHtml(t.text) + '</span>' +
+        '<button class="task-btn btn-pin' + pinBtnClass + '" title="' + pinTitle + '" onclick="pinTask(' + t.id + ')">📌</button>' +
+        '<button class="task-btn btn-done" title="标记完成" onclick="completeTask(' + t.id + ')">✓</button>' +
+        '<button class="task-btn btn-delete" title="删除任务" onclick="deleteTask(' + t.id + ')">✕</button>' +
+        '</div>';
+    }).join('');
   }
 
-  // 已完成列表
-  const doneList = document.getElementById('doneList');
+  var doneList = document.getElementById('doneList');
   if (done.length === 0) {
     doneList.innerHTML = '<div class="empty-hint">📭 还没有已完成的任务</div>';
   } else {
-    doneList.innerHTML = done.map(t => `
-      <div class="task-row" data-id="${t.id}">
-        <span class="task-num" style="background:#e8f5e9;color:#81c784;">✓</span>
-        <span class="task-text">${escapeHtml(t.text)}</span>
-        <button class="task-btn btn-restore" title="恢复任务" onclick="restoreTask(${t.id})">↩</button>
-        <button class="task-btn btn-delete" title="删除" onclick="deleteTask(${t.id})">✕</button>
-      </div>
-    `).join('');
+    doneList.innerHTML = done.map(function(t) {
+      return '<div class="task-row" data-id="' + t.id + '">' +
+        '<span class="task-num" style="background:#e8f5e9;color:#81c784;">✓</span>' +
+        '<span class="task-text">' + escapeHtml(t.text) + '</span>' +
+        '<button class="task-btn btn-restore" title="恢复任务" onclick="restoreTask(' + t.id + ')">↩</button>' +
+        '<button class="task-btn btn-delete" title="删除" onclick="deleteTask(' + t.id + ')">✕</button>' +
+        '</div>';
+    }).join('');
   }
 
-  // 计数
-  document.getElementById('activeCount').textContent = active.length;
+  document.getElementById('activeCount').textContent = sortedActive.length;
   document.getElementById('doneCount').textContent = done.length;
 
-  // 进度条
-  const total = tasks.length;
-  const pct = total === 0 ? 0 : Math.round((done.length / total) * 100);
+  var total = tasks.length;
+  var pct = total === 0 ? 0 : Math.round((done.length / total) * 100);
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressLabel').textContent = `${done.length}/${total} · ${pct}%`;
+  document.getElementById('progressLabel').textContent = done.length + '/' + total + ' · ' + pct + '%';
 }
 
 function escapeHtml(str) {
-  const div = document.createElement('div');
+  var div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
 
 // ========== 操作 ==========
 function addTask(text) {
-  if (!text) {
-    text = document.getElementById('taskInput').value.trim();
-  }
-  if (!text) {
-    document.getElementById('taskInput').focus();
-    return;
-  }
+  if (!text) text = document.getElementById('taskInput').value.trim();
+  if (!text) { document.getElementById('taskInput').focus(); return; }
 
   tasks.push({
     id: Date.now(),
     text: text,
     completed: false,
+    pinned: false,
+    pinnedAt: null,
     createdAt: Date.now(),
     completedAt: null
   });
@@ -522,16 +481,17 @@ function addTask(text) {
 }
 
 function completeTask(id) {
-  const task = tasks.find(t => t.id === id);
+  var task = tasks.find(function(t) { return t.id === id; });
   if (!task) return;
   task.completed = true;
   task.completedAt = Date.now();
+  task.pinned = false;
   save();
   renderAll();
 }
 
 function restoreTask(id) {
-  const task = tasks.find(t => t.id === id);
+  var task = tasks.find(function(t) { return t.id === id; });
   if (!task) return;
   task.completed = false;
   task.completedAt = null;
@@ -539,218 +499,44 @@ function restoreTask(id) {
   renderAll();
 }
 
+function pinTask(id) {
+  var task = tasks.find(function(t) { return t.id === id; });
+  if (!task) return;
+  task.pinned = !task.pinned;
+  task.pinnedAt = task.pinned ? Date.now() : null;
+  save();
+  renderAll();
+}
+
 function deleteTask(id) {
-  tasks = tasks.filter(t => t.id !== id);
+  tasks = tasks.filter(function(t) { return t.id !== id; });
   save();
   renderAll();
 }
 
 function clearDone() {
-  const done = tasks.filter(t => t.completed);
+  var done = tasks.filter(function(t) { return t.completed; });
   if (done.length === 0) return;
-  if (!confirm(`确定要删除全部 ${done.length} 条已完成任务吗？`)) return;
-  tasks = tasks.filter(t => !t.completed);
+  if (!confirm('确定要删除全部 ' + done.length + ' 条已完成任务吗？')) return;
+  tasks = tasks.filter(function(t) { return !t.completed; });
   save();
   renderAll();
 }
 
 function clearAllTasks() {
   if (tasks.length === 0) return;
-  if (!confirm(`确定要删除全部 ${tasks.length} 条任务吗？此操作不可恢复！`)) return;
+  if (!confirm('确定要删除全部 ' + tasks.length + ' 条任务吗？此操作不可恢复！')) return;
   tasks = [];
   save();
   renderAll();
 }
 
-// ========== 自定义拖拽排序（桌面鼠标 + 移动端触屏统一） ==========
-let drag = null;
-let lastTouchTime = 0; // 防止触屏后浏览器补发鼠标事件导致重影
-
-// ── 桌面鼠标拖拽 ──
-function onRowDown(e, el) {
-  // 触屏刚结束，忽略浏览器补发的鼠标事件
-  if (Date.now() - lastTouchTime < 400) return;
-  // 不拦截按钮点击
-  if (e.target.tagName === 'BUTTON') return;
-  if (e.button !== 0) return;
-  e.preventDefault();
-
-  const rect = el.getBoundingClientRect();
-  drag = {
-    id: parseInt(el.dataset.id),
-    el: el,
-    clone: null,
-    startX: e.clientX,
-    startY: e.clientY,
-    offX: e.clientX - rect.left,
-    offY: e.clientY - rect.top,
-    active: false
-  };
-}
-
-function onRowTouchStart(e, el) {
-  if (e.target.tagName === 'BUTTON') return;
-  var touch = e.touches[0];
-  // 阻止浏览器默认长按行为（放大镜/选择/菜单）
-  e.preventDefault();
-  var rect = el.getBoundingClientRect();
-  var cx = touch.clientX, cy = touch.clientY;
-  drag = {
-    id: parseInt(el.dataset.id),
-    el: el,
-    clone: null,
-    startX: cx,
-    startY: cy,
-    offX: cx - rect.left,
-    offY: cy - rect.top,
-    active: false,
-    touchTimer: setTimeout(function() {
-      activateDrag(cx, cy);
-    }, 500)
-  };
-}
-
-function onRowTouchMove(e, el) {
-  if (!drag) return;
-  const touch = e.touches[0];
-
-  // 未激活时，移动超过阈值则取消长按
-  if (!drag.active) {
-    if (drag.touchTimer && (Math.abs(touch.clientX - drag.startX) > 8 || Math.abs(touch.clientY - drag.startY) > 8)) {
-      clearTimeout(drag.touchTimer);
-      drag = null;
-    }
-    return;
-  }
-
-  e.preventDefault();
-  moveDrag(touch.clientX, touch.clientY);
-}
-
-function onRowTouchEnd(e, el) {
-  if (!drag) return;
-  if (drag.touchTimer) clearTimeout(drag.touchTimer);
-  if (!drag.active) { drag = null; return; }
-
-  lastTouchTime = Date.now();
-  const touch = e.changedTouches[0];
-  finishDrag(touch.clientX, touch.clientY);
-}
-
-// ── 全局鼠标移动 ──
-document.addEventListener('mousemove', function(e) {
-  if (!drag) return;
-  // 触屏刚结束，忽略浏览器补发的鼠标事件
-  if (Date.now() - lastTouchTime < 400) return;
-
-  // 激活阈值
-  if (!drag.active) {
-    if (Math.abs(e.clientX - drag.startX) < 5 && Math.abs(e.clientY - drag.startY) < 5) return;
-    activateDrag(e.clientX, e.clientY);
-  }
-
-  moveDrag(e.clientX, e.clientY);
-});
-
-// ── 全局鼠标松开 ──
-document.addEventListener('mouseup', function(e) {
-  if (!drag) return;
-  if (Date.now() - lastTouchTime < 400) { drag = null; return; }
-  if (!drag.active) { drag = null; return; }
-  finishDrag(e.clientX, e.clientY);
-});
-
-// ── 激活拖拽（创建浮动克隆） ──
-function activateDrag(cx, cy) {
-  drag.active = true;
-  document.body.classList.add('is-dragging');
-
-  var clone = drag.el.cloneNode(true);
-  clone.classList.add('drag-clone');
-  clone.style.width = drag.el.offsetWidth + 'px';
-  clone.style.left = (cx - drag.offX) + 'px';
-  clone.style.top = (cy - drag.offY) + 'px';
-  document.body.appendChild(clone);
-  drag.clone = clone;
-
-  drag.el.classList.add('dragging');
-}
-
-// ── 移动拖拽 ──
-function moveDrag(cx, cy) {
-  drag.clone.style.left = (cx - drag.offX) + 'px';
-  drag.clone.style.top = (cy - drag.offY) + 'px';
-
-  // 隐藏克隆后探测下方元素
-  drag.clone.style.display = 'none';
-  var elemBelow = document.elementFromPoint(cx, cy);
-  drag.clone.style.display = '';
-
-  // 高亮目标行
-  document.querySelectorAll('.task-row.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
-  var rowBelow = elemBelow ? elemBelow.closest('.task-row') : null;
-  if (rowBelow && rowBelow.dataset.id && parseInt(rowBelow.dataset.id) !== drag.id) {
-    rowBelow.classList.add('drag-over');
-  }
-}
-
-// ── 结束拖拽 ──
-function finishDrag(cx, cy) {
-  if (drag.clone) {
-    drag.clone.remove();
-    drag.clone = null;
-  }
-
-  drag.el.classList.remove('dragging');
-  document.body.classList.remove('is-dragging');
-  document.querySelectorAll('.task-row.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
-
-  // 探测落点
-  var elemBelow = document.elementFromPoint(cx, cy);
-  var rowBelow = elemBelow ? elemBelow.closest('.task-row') : null;
-
-  if (rowBelow && rowBelow.dataset.id && parseInt(rowBelow.dataset.id) !== drag.id) {
-    reorderTasks(drag.id, parseInt(rowBelow.dataset.id));
-  }
-
-  drag = null;
-}
-
-// ── 重排 ──
-function reorderTasks(fromId, toId) {
-  var activeTasks = tasks.filter(function(t) { return !t.completed; });
-  var completedTasks = tasks.filter(function(t) { return t.completed; });
-
-  var fromIdx = activeTasks.findIndex(function(t) { return t.id === fromId; });
-  var toIdx = activeTasks.findIndex(function(t) { return t.id === toId; });
-  if (fromIdx === -1 || toIdx === -1) return;
-
-  var moved = activeTasks.splice(fromIdx, 1)[0];
-  activeTasks.splice(toIdx, 0, moved);
-
-  tasks = activeTasks.concat(completedTasks);
-  save();
-  renderAll();
-}
-
-// ── 首次触摸时显示长按提示 ──
-var hintShown = false;
-document.getElementById('activeList').addEventListener('touchstart', function() {
-  if (hintShown) return;
-  hintShown = true;
-  var hint = document.createElement('div');
-  hint.className = 'longpress-hint';
-  hint.textContent = '💡 长按任务可拖拽排序';
-  document.body.appendChild(hint);
-  setTimeout(function() { hint.remove(); }, 2200);
-}, { once: true });
-
 // ========== 导出 / 导入 ==========
 function exportTasks() {
-  const data = JSON.stringify(tasks, null, 2);
-  const blob = new Blob([data], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  var data = JSON.stringify(tasks, null, 2);
+  var blob = new Blob([data], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
   a.href = url;
   a.download = '任务备份_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
@@ -762,14 +548,14 @@ function importTasks() {
 }
 
 function handleImport(event) {
-  const file = event.target.files[0];
+  var file = event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const data = JSON.parse(e.target.result);
+      var data = JSON.parse(e.target.result);
       if (!Array.isArray(data)) throw new Error('格式错误');
-      if (!confirm(`即将导入 ${data.length} 条任务，当前任务会被覆盖。确定继续？`)) return;
+      if (!confirm('即将导入 ' + data.length + ' 条任务，当前任务会被覆盖。确定继续？')) return;
       tasks = data;
       save();
       renderAll();
@@ -793,11 +579,10 @@ document.getElementById('taskInput').addEventListener('keydown', function(e) {
 load();
 renderAll();
 
-// 首次使用，放两条示例
 if (tasks.length === 0) {
   tasks.push(
-    { id: Date.now(),       text: '👋 欢迎使用任务看板！鼠标拖拽或长按可排序', completed: false, createdAt: Date.now(), completedAt: null },
-    { id: Date.now() + 100, text: '📝 这是一个示例任务，右边的 ✕ 可删除',     completed: false, createdAt: Date.now(), completedAt: null }
+    { id: Date.now(),       text: '👋 欢迎使用任务看板！点 📌 可置顶重要任务', pinned: false, pinnedAt: null, completed: false, createdAt: Date.now(), completedAt: null },
+    { id: Date.now() + 100, text: '📝 置顶任务会加粗显示并排在最前面',           pinned: false, pinnedAt: null, completed: false, createdAt: Date.now(), completedAt: null }
   );
   save();
   renderAll();
@@ -806,7 +591,6 @@ if (tasks.length === 0) {
 
 <script>
 // ========== PWA 安装 & 更新检测 ==========
-
 function showUpdateBanner(sw) {
   var banner = document.getElementById('updateBanner');
   if (!banner) {
@@ -814,12 +598,10 @@ function showUpdateBanner(sw) {
     banner.id = 'updateBanner';
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;' +
       'background:#ffb74d;color:#fff;padding:12px 16px;text-align:center;' +
-      'font-size:14px;font-weight:600;cursor:pointer;' +
-      'animation:slideDown 0.35s ease;box-shadow:0 2px 12px rgba(0,0,0,0.15);';
+      'font-size:14px;font-weight:600;cursor:pointer;animation:slideDown 0.35s ease;' +
+      'box-shadow:0 2px 12px rgba(0,0,0,0.15);';
     banner.onclick = function() {
-      if (sw && sw.waiting) {
-        sw.waiting.postMessage({ type: 'skip-waiting' });
-      }
+      if (sw && sw.waiting) sw.waiting.postMessage({ type: 'skip-waiting' });
       window.location.reload();
     };
     document.body.appendChild(banner);
@@ -829,22 +611,16 @@ function showUpdateBanner(sw) {
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'sw-updated') {
-      showUpdateBanner();
-    }
+    if (e.data && e.data.type === 'sw-updated') showUpdateBanner();
   });
 
   navigator.serviceWorker.register('/taskboard/sw.js').then(function(reg) {
-    if (reg.waiting) {
-      showUpdateBanner(reg);
-    }
+    if (reg.waiting) showUpdateBanner(reg);
     reg.addEventListener('updatefound', function() {
       var newSW = reg.installing;
       if (!newSW) return;
       newSW.addEventListener('statechange', function() {
-        if (this.state === 'installed' && navigator.serviceWorker.controller) {
-          showUpdateBanner(reg);
-        }
+        if (this.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(reg);
       });
     });
   });
@@ -854,9 +630,7 @@ if ('serviceWorker' in navigator) {
       if (reg) reg.update();
     });
   }, 30 * 60 * 1000);
-}
 
-if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', function() {
     window.location.reload();
   });
@@ -874,9 +648,7 @@ function installOrGuide() {
   if (__pwaPrompt) {
     __pwaPrompt.prompt();
     __pwaPrompt.userChoice.then(function(r) {
-      if (r.outcome === 'accepted') {
-        document.getElementById('installBox').style.display = 'none';
-      }
+      if (r.outcome === 'accepted') document.getElementById('installBox').style.display = 'none';
     });
   } else {
     alert('请点浏览器右上角 ⋮ 或 ≡ →「添加到主屏幕」\n\n如果菜单里没有，请下拉刷新页面后再试。');

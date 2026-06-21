@@ -322,10 +322,6 @@
 
 <div class="header">
   <h1>📋 任务看板</h1>
-  <div id="installBox" style="margin-top:10px;display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:20px;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;font-size:14px;color:#555;" onclick="installOrGuide()">
-    <span style="font-size:18px;">📲</span>
-    <span id="installBoxText">添加到手机桌面</span>
-  </div>
   <div class="add-bar">
     <input type="text" id="taskInput" placeholder="输入新任务，按 Enter 添加…" maxlength="200">
     <button onclick="addTask()">＋ 添加</button>
@@ -657,25 +653,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistration().then(function(reg) { if (reg) reg.update(); });
   }, 30 * 60 * 1000);
   navigator.serviceWorker.addEventListener('controllerchange', function() { window.location.reload(); });
-}
-
-var __pwaPrompt = null;
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  __pwaPrompt = e;
-  var el = document.getElementById('installBoxText');
-  if (el) el.textContent = '📲 点这里一键安装到桌面';
-});
-
-function installOrGuide() {
-  if (__pwaPrompt) {
-    __pwaPrompt.prompt();
-    __pwaPrompt.userChoice.then(function(r) {
-      if (r.outcome === 'accepted') document.getElementById('installBox').style.display = 'none';
-    });
-  } else {
-    alert('请点浏览器右上角 ⋮ 或 ≡ →「添加到主屏幕」\n\n如果菜单里没有，请下拉刷新页面后再试。');
-  }
 }
 </script>
 </body>

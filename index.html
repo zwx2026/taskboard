@@ -265,8 +265,10 @@
     cursor: grabbing;
   }
   .task-row.dragging {
-    opacity: 0.35;
-    transition: opacity 0.15s;
+    opacity: 0.45;
+    background: rgba(255,255,255,0.5);
+    box-shadow: inset 3px 0 0 #ffb74d;
+    transition: all 0.15s;
   }
   .task-row.drag-over {
     border: 2px dashed #ffb74d;
@@ -551,6 +553,7 @@ function clearAllTasks() {
 
 // ========== 拖拽排序 ==========
 let dragSrcId = null;
+let dragGhost = null;
 
 function dragStart(e, el) {
   if (e.target.tagName === 'BUTTON') {
@@ -560,11 +563,26 @@ function dragStart(e, el) {
   dragSrcId = parseInt(el.dataset.id);
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', dragSrcId);
-  setTimeout(() => el.classList.add('dragging'), 0);
+
+  // 创建自定义拖拽图像，替换浏览器默认重影
+  dragGhost = el.cloneNode(true);
+  dragGhost.style.cssText =
+    'position:absolute;top:-9999px;left:-9999px;' +
+    'opacity:0.88;transform:rotate(1.5deg) scale(1.03);' +
+    'box-shadow:0 8px 28px rgba(0,0,0,0.18);border-radius:10px;background:#fffef7;' +
+    'width:' + el.offsetWidth + 'px';
+  dragGhost.classList.remove('dragging', 'drag-over');
+  document.body.appendChild(dragGhost);
+  e.dataTransfer.setDragImage(dragGhost, e.offsetX || el.offsetWidth / 2, e.offsetY || 20);
+
+  requestAnimationFrame(() => {
+    el.classList.add('dragging');
+  });
 }
 
 function dragEnd(e, el) {
   el.classList.remove('dragging');
+  if (dragGhost) { dragGhost.remove(); dragGhost = null; }
   document.querySelectorAll('.task-row.drag-over').forEach(row => row.classList.remove('drag-over'));
   dragSrcId = null;
 }
@@ -572,18 +590,23 @@ function dragEnd(e, el) {
 function dragOver(e, el) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-  if (el.dataset.id != dragSrcId) {
+  // 先清所有高亮再点亮当前行，防止子元素触发 dragLeave 闪烁
+  if (dragSrcId && el.dataset.id != dragSrcId) {
+    document.querySelectorAll('.task-row.drag-over').forEach(r => {
+      if (r !== el) r.classList.remove('drag-over');
+    });
     el.classList.add('drag-over');
   }
 }
 
 function dragLeave(e, el) {
-  el.classList.remove('drag-over');
+  // 交给 dragOver 统一管理，避免闪烁
 }
 
 function drop(e, el) {
   e.preventDefault();
   el.classList.remove('drag-over');
+  document.querySelectorAll('.task-row.drag-over').forEach(r => r.classList.remove('drag-over'));
   const targetId = parseInt(el.dataset.id);
   if (dragSrcId && dragSrcId !== targetId) {
     reorderTasks(dragSrcId, targetId);
@@ -592,7 +615,6 @@ function drop(e, el) {
 }
 
 function reorderTasks(fromId, toId) {
-  // 仅对待完成区生效：取出活跃任务按当前顺序排列
   const activeTasks = tasks.filter(t => !t.completed);
   const completedTasks = tasks.filter(t => t.completed);
 
@@ -600,11 +622,9 @@ function reorderTasks(fromId, toId) {
   const toIdx = activeTasks.findIndex(t => t.id === toId);
   if (fromIdx === -1 || toIdx === -1) return;
 
-  // 移动
   const [moved] = activeTasks.splice(fromIdx, 1);
   activeTasks.splice(toIdx, 0, moved);
 
-  // 重建：活跃任务新顺序 + 已完成任务保持不变
   tasks = [...activeTasks, ...completedTasks];
   save();
   renderAll();

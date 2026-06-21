@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="任务看板">
@@ -26,7 +26,7 @@
 
   .header {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 20px;
   }
   .header h1 {
     font-size: 28px;
@@ -39,12 +39,12 @@
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-top: 18px;
+    margin-top: 14px;
     flex-wrap: wrap;
   }
   .add-bar input {
     width: 420px;
-    max-width: 80vw;
+    max-width: 75vw;
     padding: 12px 18px;
     font-size: 16px;
     border: 2px solid #e0d8cc;
@@ -76,76 +76,115 @@
     box-shadow: 0 4px 14px rgba(255,167,38,0.3);
   }
 
-  .board {
-    display: flex;
-    gap: 24px;
-    max-width: 1100px;
-    margin: 0 auto;
-    align-items: flex-start;
-  }
-
-  @media (max-width: 750px) {
-    .board {
-      flex-direction: column;
-      align-items: stretch;
-    }
-  }
-
-  .panel {
-    flex: 1;
-    min-width: 280px;
-    border-radius: 6px 6px 16px 6px;
-    box-shadow: 4px 5px 20px rgba(0,0,0,0.1), 1px 1px 3px rgba(0,0,0,0.06);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 400px;
-  }
-
-  .panel-head {
-    padding: 16px 20px;
-    font-size: 17px;
-    font-weight: 700;
+  /* ── 进度条 ── */
+  .progress-wrap {
+    max-width: 600px;
+    margin: 0 auto 16px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    padding: 0 4px;
   }
-  .panel-head .count {
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #e8e0d5;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #66bb6a;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
     font-size: 13px;
+    color: #999;
+    white-space: nowrap;
+  }
+
+  /* ── 标签栏 ── */
+  .tab-bar {
+    display: flex;
+    max-width: 600px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 13px 16px;
+    border: none;
+    background: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-family: inherit;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tab-btn .tab-count {
+    font-size: 12px;
     font-weight: 500;
     opacity: 0.7;
   }
+  .tab-btn.active {
+    background: #ffb74d;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(255,167,38,0.25);
+  }
+  .tab-btn.active .tab-count {
+    color: #fff;
+  }
+  .tab-done.active {
+    background: #81c784;
+    box-shadow: 0 2px 8px rgba(129,199,132,0.25);
+  }
 
-  .panel-active {
+  /* ── 页面滑动容器 ── */
+  .page-outer {
+    max-width: 600px;
+    margin: 12px auto 0;
+    overflow: hidden;
+    border-radius: 16px;
     background: #fffef7;
-    border: 1px solid #ede7d5;
+    box-shadow: 4px 5px 20px rgba(0,0,0,0.1), 1px 1px 3px rgba(0,0,0,0.06);
+    min-height: 420px;
+    position: relative;
   }
-  .panel-active .panel-head {
-    background: #fff8e1;
-    color: #6d5b2e;
-    border-bottom: 1px solid #f0e4c6;
+  .page-inner {
+    display: flex;
+    width: 200%;
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
   }
-
-  .panel-done {
+  .page-inner.at-done {
+    transform: translateX(-50%);
+  }
+  .page {
+    width: 50%;
+    padding: 14px 16px;
+    min-height: 420px;
+  }
+  .page-active {
+    background: #fffef7;
+  }
+  .page-done {
     background: #fafff7;
-    border: 1px solid #dce8d5;
-  }
-  .panel-done .panel-head {
-    background: #e8f5e9;
-    color: #3e5c3a;
-    border-bottom: 1px solid #d0e2cc;
   }
 
-  .panel-body {
-    padding: 12px 14px;
-    flex: 1;
-    min-height: 200px;
-  }
-
+  /* 空状态 */
   .empty-hint {
     text-align: center;
     color: #ccc;
-    padding: 40px 10px;
+    padding: 60px 10px;
     font-size: 14px;
   }
 
@@ -170,7 +209,6 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
 
-  /* 置顶任务样式 */
   .task-row.pinned {
     background: linear-gradient(135deg, #fff8e1, #ffecb3);
     border-left: 3px solid #ffb74d;
@@ -207,7 +245,7 @@
     line-height: 1.5;
     word-break: break-word;
   }
-  .panel-done .task-text {
+  .page-done .task-text {
     text-decoration: line-through;
     color: #aaa;
   }
@@ -226,70 +264,27 @@
     justify-content: center;
     transition: all 0.2s;
     background: #fff;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .btn-pin {
-    color: #ccc;
-    border-color: transparent;
-    font-size: 15px;
-  }
-  .btn-pin:hover {
-    background: #ffb74d;
-    color: #fff;
-    border-color: #ffb74d;
-    transform: scale(1.1);
-  }
-  .btn-pin.is-pinned {
-    color: #ff8f00;
-    background: #fff8e1;
-    border-color: #ffb74d;
-  }
-  .btn-pin.is-pinned:hover {
-    background: #e0e0e0;
-    color: #888;
-    border-color: #ccc;
-  }
+  .btn-pin { color: #ccc; border-color: transparent; font-size: 15px; }
+  .btn-pin:hover { background: #ffb74d; color: #fff; border-color: #ffb74d; transform: scale(1.1); }
+  .btn-pin.is-pinned { color: #ff8f00; background: #fff8e1; border-color: #ffb74d; }
+  .btn-pin.is-pinned:hover { background: #e0e0e0; color: #888; border-color: #ccc; }
 
-  .btn-done {
-    color: #bbb;
-    border-color: #e0d8cc;
-  }
-  .btn-done:hover {
-    background: #43a047;
-    color: #fff;
-    border-color: #43a047;
-    transform: scale(1.08);
-    box-shadow: 0 3px 10px rgba(67,160,71,0.3);
-  }
+  .btn-done { color: #bbb; border-color: #e0d8cc; }
+  .btn-done:hover { background: #43a047; color: #fff; border-color: #43a047; transform: scale(1.08); box-shadow: 0 3px 10px rgba(67,160,71,0.3); }
 
-  .btn-restore {
-    color: #bbb;
-    border-color: #e0d8cc;
-  }
-  .btn-restore:hover {
-    background: #ffb74d;
-    color: #fff;
-    border-color: #ffb74d;
-    transform: scale(1.08);
-    box-shadow: 0 3px 10px rgba(255,183,77,0.3);
-  }
+  .btn-restore { color: #bbb; border-color: #e0d8cc; }
+  .btn-restore:hover { background: #ffb74d; color: #fff; border-color: #ffb74d; transform: scale(1.08); box-shadow: 0 3px 10px rgba(255,183,77,0.3); }
 
-  .btn-delete {
-    color: #bbb;
-    border-color: transparent;
-    font-size: 14px;
-  }
-  .btn-delete:hover {
-    background: #ef5350;
-    color: #fff;
-    border-color: #ef5350;
-    transform: scale(1.08);
-  }
+  .btn-delete { color: #bbb; border-color: transparent; font-size: 14px; }
+  .btn-delete:hover { background: #ef5350; color: #fff; border-color: #ef5350; transform: scale(1.08); }
 
   /* ── 底部工具栏 ── */
   .footer-bar {
     text-align: center;
-    margin-top: 28px;
+    margin-top: 22px;
     display: flex;
     justify-content: center;
     gap: 10px;
@@ -306,43 +301,20 @@
     transition: all 0.2s;
     font-family: inherit;
   }
-  .footer-bar button:hover {
-    background: #fafafa;
-    color: #555;
-    border-color: #bbb;
-  }
-  .footer-bar .btn-danger:hover {
-    background: #fff5f5;
-    color: #ef5350;
-    border-color: #ef5350;
+  .footer-bar button:hover { background: #fafafa; color: #555; border-color: #bbb; }
+  .footer-bar .btn-danger:hover { background: #fff5f5; color: #ef5350; border-color: #ef5350; }
+
+  @keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to   { transform: translateY(0); }
   }
 
-  /* ── 进度条 ── */
-  .progress-wrap {
-    max-width: 1100px;
-    margin: 0 auto 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 4px;
-  }
-  .progress-bar {
-    flex: 1;
-    height: 6px;
-    background: #e8e0d5;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: #66bb6a;
-    border-radius: 3px;
-    transition: width 0.4s ease;
-  }
-  .progress-label {
-    font-size: 13px;
-    color: #999;
-    white-space: nowrap;
+  /* ── 响应式 ── */
+  @media (max-width: 480px) {
+    body { padding: 16px 10px; }
+    .header h1 { font-size: 22px; }
+    .page-outer { min-height: 360px; border-radius: 12px; }
+    .page { padding: 10px 8px; min-height: 360px; }
   }
 </style>
 </head>
@@ -350,7 +322,7 @@
 
 <div class="header">
   <h1>📋 任务看板</h1>
-  <div id="installBox" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:20px;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;font-size:14px;color:#555;" onclick="installOrGuide()">
+  <div id="installBox" style="margin-top:10px;display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:20px;padding:8px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;font-size:14px;color:#555;" onclick="installOrGuide()">
     <span style="font-size:18px;">📲</span>
     <span id="installBoxText">添加到手机桌面</span>
   </div>
@@ -365,15 +337,25 @@
   <span class="progress-label" id="progressLabel">0/0</span>
 </div>
 
-<div class="board">
-  <div class="panel panel-active">
-    <div class="panel-head">📝 待完成 <span class="count" id="activeCount">0</span></div>
-    <div class="panel-body" id="activeList"></div>
-  </div>
+<!-- 标签栏 -->
+<div class="tab-bar">
+  <button class="tab-btn tab-active active" id="tabActive" onclick="switchPage(0)">
+    📝 待完成 <span class="tab-count" id="activeCount">0</span>
+  </button>
+  <button class="tab-btn tab-done" id="tabDone" onclick="switchPage(1)">
+    ✅ 已完成 <span class="tab-count" id="doneCount">0</span>
+  </button>
+</div>
 
-  <div class="panel panel-done">
-    <div class="panel-head">✅ 已完成 <span class="count" id="doneCount">0</span></div>
-    <div class="panel-body" id="doneList"></div>
+<!-- 页面滑动区 -->
+<div class="page-outer" id="pageOuter">
+  <div class="page-inner" id="pageInner">
+    <div class="page page-active" id="activePage">
+      <div id="activeList"></div>
+    </div>
+    <div class="page page-done" id="donePage">
+      <div id="doneList"></div>
+    </div>
   </div>
 </div>
 
@@ -387,13 +369,13 @@
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
-const STORAGE_KEY = 'task_board_v3';
-
-let tasks = [];
+var STORAGE_KEY = 'task_board_v3';
+var tasks = [];
+var currentPage = 0;
 
 function load() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    var raw = localStorage.getItem(STORAGE_KEY);
     if (raw) tasks = JSON.parse(raw);
   } catch(e) { tasks = []; }
 }
@@ -401,40 +383,88 @@ function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
+// ========== 页面切换 ==========
+function switchPage(n) {
+  if (n === currentPage) return;
+  currentPage = n;
+  var inner = document.getElementById('pageInner');
+  var tabA = document.getElementById('tabActive');
+  var tabD = document.getElementById('tabDone');
+
+  if (n === 0) {
+    inner.classList.remove('at-done');
+    tabA.classList.add('active');
+    tabD.classList.remove('active');
+  } else {
+    inner.classList.add('at-done');
+    tabD.classList.add('active');
+    tabA.classList.remove('active');
+  }
+}
+
+// ── 左右滑动切换 ──
+var swipeStartX = 0, swipeStartY = 0, swipeLocked = false;
+document.getElementById('pageOuter').addEventListener('touchstart', function(e) {
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+  swipeLocked = false;
+});
+
+document.getElementById('pageOuter').addEventListener('touchmove', function(e) {
+  if (swipeLocked) return;
+  var dx = e.touches[0].clientX - swipeStartX;
+  var dy = e.touches[0].clientY - swipeStartY;
+  // 横向滑动为主 → 拦截
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+    e.preventDefault();
+    swipeLocked = true;
+  }
+}, { passive: false });
+
+document.getElementById('pageOuter').addEventListener('touchend', function(e) {
+  var dx = e.changedTouches[0].clientX - swipeStartX;
+  var dy = e.changedTouches[0].clientY - swipeStartY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    if (dx < 0 && currentPage === 0) switchPage(1);
+    if (dx > 0 && currentPage === 1) switchPage(0);
+  }
+});
+
 // ========== 渲染 ==========
 function renderAll() {
   var active = tasks.filter(function(t) { return !t.completed; });
   var done   = tasks.filter(function(t) { return  t.completed; });
 
-  // 待完成：置顶在前（最近置顶靠前），非置顶在后
+  // 置顶排序
   var pinned = active.filter(function(t) { return t.pinned; });
   var unpinned = active.filter(function(t) { return !t.pinned; });
   pinned.sort(function(a, b) { return (b.pinnedAt || 0) - (a.pinnedAt || 0); });
   var sortedActive = pinned.concat(unpinned);
 
-  var activeList = document.getElementById('activeList');
+  // 待完成
+  var al = document.getElementById('activeList');
   if (sortedActive.length === 0) {
-    activeList.innerHTML = '<div class="empty-hint">✨ 还没有任务<br>在上方输入框写下第一个任务吧</div>';
+    al.innerHTML = '<div class="empty-hint">✨ 还没有任务<br>在上方输入框写下第一个任务吧</div>';
   } else {
-    activeList.innerHTML = sortedActive.map(function(t, i) {
-      var pinnedClass = t.pinned ? ' pinned' : '';
-      var pinBtnClass = t.pinned ? ' is-pinned' : '';
-      var pinTitle = t.pinned ? '取消置顶' : '置顶';
-      return '<div class="task-row' + pinnedClass + '" data-id="' + t.id + '">' +
+    al.innerHTML = sortedActive.map(function(t, i) {
+      var pc = t.pinned ? ' pinned' : '';
+      var pbc = t.pinned ? ' is-pinned' : '';
+      return '<div class="task-row' + pc + '" data-id="' + t.id + '">' +
         '<span class="task-num">' + (i + 1) + '</span>' +
         '<span class="task-text">' + escapeHtml(t.text) + '</span>' +
-        '<button class="task-btn btn-pin' + pinBtnClass + '" title="' + pinTitle + '" onclick="pinTask(' + t.id + ')">📌</button>' +
+        '<button class="task-btn btn-pin' + pbc + '" title="' + (t.pinned ? '取消置顶' : '置顶') + '" onclick="pinTask(' + t.id + ')">📌</button>' +
         '<button class="task-btn btn-done" title="标记完成" onclick="completeTask(' + t.id + ')">✓</button>' +
-        '<button class="task-btn btn-delete" title="删除任务" onclick="deleteTask(' + t.id + ')">✕</button>' +
+        '<button class="task-btn btn-delete" title="删除" onclick="deleteTask(' + t.id + ')">✕</button>' +
         '</div>';
     }).join('');
   }
 
-  var doneList = document.getElementById('doneList');
+  // 已完成
+  var dl = document.getElementById('doneList');
   if (done.length === 0) {
-    doneList.innerHTML = '<div class="empty-hint">📭 还没有已完成的任务</div>';
+    dl.innerHTML = '<div class="empty-hint">📭 还没有已完成的任务</div>';
   } else {
-    doneList.innerHTML = done.map(function(t) {
+    dl.innerHTML = done.map(function(t) {
       return '<div class="task-row" data-id="' + t.id + '">' +
         '<span class="task-num" style="background:#e8f5e9;color:#81c784;">✓</span>' +
         '<span class="task-text">' + escapeHtml(t.text) + '</span>' +
@@ -444,9 +474,9 @@ function renderAll() {
     }).join('');
   }
 
+  // 计数 & 进度
   document.getElementById('activeCount').textContent = sortedActive.length;
   document.getElementById('doneCount').textContent = done.length;
-
   var total = tasks.length;
   var pct = total === 0 ? 0 : Math.round((done.length / total) * 100);
   document.getElementById('progressFill').style.width = pct + '%';
@@ -575,14 +605,14 @@ document.getElementById('taskInput').addEventListener('keydown', function(e) {
   }
 });
 
-// ========== 初始化 ==========
+// ========== 初始 ==========
 load();
 renderAll();
 
 if (tasks.length === 0) {
   tasks.push(
-    { id: Date.now(),       text: '👋 欢迎使用任务看板！点 📌 可置顶重要任务', pinned: false, pinnedAt: null, completed: false, createdAt: Date.now(), completedAt: null },
-    { id: Date.now() + 100, text: '📝 置顶任务会加粗显示并排在最前面',           pinned: false, pinnedAt: null, completed: false, createdAt: Date.now(), completedAt: null }
+    { id: Date.now(),       text: '👋 欢迎！点 📌 可置顶重要任务',     pinned: false, pinnedAt: null, completed: false, createdAt: Date.now(), completedAt: null },
+    { id: Date.now() + 100, text: '👉 点上方标签或左右滑动切换页面', pinned: false, pinnedAt: null, completed: false, createdAt: Date.now(), completedAt: null }
   );
   save();
   renderAll();
@@ -590,50 +620,43 @@ if (tasks.length === 0) {
 </script>
 
 <script>
-// ========== PWA 安装 & 更新检测 ==========
+// ========== PWA ==========
 function showUpdateBanner(sw) {
-  var banner = document.getElementById('updateBanner');
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = 'updateBanner';
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;' +
+  var b = document.getElementById('updateBanner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'updateBanner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;' +
       'background:#ffb74d;color:#fff;padding:12px 16px;text-align:center;' +
       'font-size:14px;font-weight:600;cursor:pointer;animation:slideDown 0.35s ease;' +
       'box-shadow:0 2px 12px rgba(0,0,0,0.15);';
-    banner.onclick = function() {
+    b.onclick = function() {
       if (sw && sw.waiting) sw.waiting.postMessage({ type: 'skip-waiting' });
       window.location.reload();
     };
-    document.body.appendChild(banner);
+    document.body.appendChild(b);
   }
-  banner.textContent = '🔄 新版本已就绪 · 点此刷新';
+  b.textContent = '🔄 新版本已就绪 · 点此刷新';
 }
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'sw-updated') showUpdateBanner();
   });
-
   navigator.serviceWorker.register('/taskboard/sw.js').then(function(reg) {
     if (reg.waiting) showUpdateBanner(reg);
     reg.addEventListener('updatefound', function() {
-      var newSW = reg.installing;
-      if (!newSW) return;
-      newSW.addEventListener('statechange', function() {
+      var s = reg.installing;
+      if (!s) return;
+      s.addEventListener('statechange', function() {
         if (this.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(reg);
       });
     });
   });
-
   setInterval(function() {
-    navigator.serviceWorker.getRegistration().then(function(reg) {
-      if (reg) reg.update();
-    });
+    navigator.serviceWorker.getRegistration().then(function(reg) { if (reg) reg.update(); });
   }, 30 * 60 * 1000);
-
-  navigator.serviceWorker.addEventListener('controllerchange', function() {
-    window.location.reload();
-  });
+  navigator.serviceWorker.addEventListener('controllerchange', function() { window.location.reload(); });
 }
 
 var __pwaPrompt = null;
@@ -655,6 +678,5 @@ function installOrGuide() {
   }
 }
 </script>
-
 </body>
 </html>

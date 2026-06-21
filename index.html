@@ -245,7 +245,7 @@
   }
 
   .btn-delete {
-    color: #ddd;
+    color: #bbb;
     border-color: transparent;
     font-size: 14px;
   }
@@ -254,6 +254,54 @@
     color: #fff;
     border-color: #ef5350;
     transform: scale(1.08);
+  }
+
+  /* ── 拖拽排序 ── */
+  .task-row[draggable="true"] {
+    cursor: grab;
+    user-select: none;
+  }
+  .task-row[draggable="true"]:active {
+    cursor: grabbing;
+  }
+  .task-row.dragging {
+    opacity: 0.35;
+    transition: opacity 0.15s;
+  }
+  .task-row.drag-over {
+    border: 2px dashed #ffb74d;
+    background: rgba(255,183,77,0.1);
+    transform: scale(1.02);
+  }
+  .drag-clone {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.92;
+    transform: rotate(2.5deg) scale(1.04);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+    border-radius: 10px;
+    background: #fffef7;
+  }
+  .longpress-hint {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    z-index: 9998;
+    animation: fadeInOut 2s ease forwards;
+    pointer-events: none;
+  }
+  @keyframes fadeInOut {
+    0%   { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+    80%  { opacity: 1; }
+    100% { opacity: 0; }
   }
 
   /* ── 底部工具栏 ── */
@@ -360,7 +408,7 @@
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
-const STORAGE_KEY = 'task_board_v1';
+const STORAGE_KEY = 'task_board_v2';
 
 let tasks = [];
 
@@ -386,10 +434,16 @@ function renderAll() {
     activeList.innerHTML = '<div class="empty-hint">✨ 还没有任务<br>在上方输入框写下第一个任务吧</div>';
   } else {
     activeList.innerHTML = active.map((t, i) => `
-      <div class="task-row" data-id="${t.id}">
+      <div class="task-row" data-id="${t.id}" draggable="true"
+           ondragstart="dragStart(event,this)" ondragend="dragEnd(event,this)"
+           ondragover="dragOver(event,this)" ondragleave="dragLeave(event,this)"
+           ondrop="drop(event,this)"
+           ontouchstart="touchStart(event,this)" ontouchmove="touchMove(event,this)"
+           ontouchend="touchEnd(event,this)">
         <span class="task-num">${i + 1}</span>
         <span class="task-text">${escapeHtml(t.text)}</span>
         <button class="task-btn btn-done" title="标记完成" onclick="completeTask(${t.id})">✓</button>
+        <button class="task-btn btn-delete" title="删除任务" onclick="deleteTask(${t.id})">✕</button>
       </div>
     `).join('');
   }
@@ -491,6 +545,166 @@ function clearAllTasks() {
   renderAll();
 }
 
+// ========== 拖拽排序 ==========
+let dragSrcId = null;
+
+function dragStart(e, el) {
+  if (e.target.tagName === 'BUTTON') {
+    e.preventDefault();
+    return;
+  }
+  dragSrcId = parseInt(el.dataset.id);
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragSrcId);
+  setTimeout(() => el.classList.add('dragging'), 0);
+}
+
+function dragEnd(e, el) {
+  el.classList.remove('dragging');
+  document.querySelectorAll('.task-row.drag-over').forEach(row => row.classList.remove('drag-over'));
+  dragSrcId = null;
+}
+
+function dragOver(e, el) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (el.dataset.id != dragSrcId) {
+    el.classList.add('drag-over');
+  }
+}
+
+function dragLeave(e, el) {
+  el.classList.remove('drag-over');
+}
+
+function drop(e, el) {
+  e.preventDefault();
+  el.classList.remove('drag-over');
+  const targetId = parseInt(el.dataset.id);
+  if (dragSrcId && dragSrcId !== targetId) {
+    reorderTasks(dragSrcId, targetId);
+  }
+  dragSrcId = null;
+}
+
+function reorderTasks(fromId, toId) {
+  // 仅对待完成区生效：取出活跃任务按当前顺序排列
+  const activeTasks = tasks.filter(t => !t.completed);
+  const completedTasks = tasks.filter(t => t.completed);
+
+  const fromIdx = activeTasks.findIndex(t => t.id === fromId);
+  const toIdx = activeTasks.findIndex(t => t.id === toId);
+  if (fromIdx === -1 || toIdx === -1) return;
+
+  // 移动
+  const [moved] = activeTasks.splice(fromIdx, 1);
+  activeTasks.splice(toIdx, 0, moved);
+
+  // 重建：活跃任务新顺序 + 已完成任务保持不变
+  tasks = [...activeTasks, ...completedTasks];
+  save();
+  renderAll();
+}
+
+// ── 移动端长按拖拽 ──
+let longPressTimer = null;
+let touchDragId = null;
+let dragClone = null;
+let cloneOffsetX = 0, cloneOffsetY = 0;
+let touchStartX = 0, touchStartY = 0;
+let hasMoved = false;
+let hintShown = false;
+
+function showLongpressHint() {
+  if (hintShown) return;
+  hintShown = true;
+  const hint = document.createElement('div');
+  hint.className = 'longpress-hint';
+  hint.textContent = '💡 长按任务可拖拽排序';
+  document.body.appendChild(hint);
+  setTimeout(() => hint.remove(), 2200);
+}
+
+function touchStart(e, el) {
+  if (e.target.tagName === 'BUTTON') return;
+  const touch = e.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchDragId = parseInt(el.dataset.id);
+  hasMoved = false;
+
+  const rect = el.getBoundingClientRect();
+  cloneOffsetX = touch.clientX - rect.left;
+  cloneOffsetY = touch.clientY - rect.top;
+
+  longPressTimer = setTimeout(() => {
+    // 创建浮动克隆
+    dragClone = el.cloneNode(true);
+    dragClone.classList.add('drag-clone');
+    dragClone.style.width = el.offsetWidth + 'px';
+    dragClone.style.left = (touch.clientX - cloneOffsetX) + 'px';
+    dragClone.style.top = (touch.clientY - cloneOffsetY) + 'px';
+    document.body.appendChild(dragClone);
+    el.classList.add('dragging');
+    hasMoved = true;
+  }, 500);
+}
+
+function touchMove(e, el) {
+  if (!hasMoved && longPressTimer) {
+    const touch = e.touches[0];
+    if (Math.abs(touch.clientX - touchStartX) > 8 || Math.abs(touch.clientY - touchStartY) > 8) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  if (dragClone) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    dragClone.style.left = (touch.clientX - cloneOffsetX) + 'px';
+    dragClone.style.top = (touch.clientY - cloneOffsetY) + 'px';
+
+    // 高亮下方目标行
+    document.querySelectorAll('.task-row.drag-over').forEach(r => r.classList.remove('drag-over'));
+    const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+    const rowBelow = elemBelow ? elemBelow.closest('.task-row') : null;
+    if (rowBelow && rowBelow.dataset.id && parseInt(rowBelow.dataset.id) !== touchDragId) {
+      rowBelow.classList.add('drag-over');
+    }
+  }
+}
+
+function touchEnd(e, el) {
+  clearTimeout(longPressTimer);
+  longPressTimer = null;
+
+  if (dragClone) {
+    dragClone.remove();
+    dragClone = null;
+
+    el.classList.remove('dragging');
+    document.querySelectorAll('.task-row.drag-over').forEach(r => r.classList.remove('drag-over'));
+
+    const touch = e.changedTouches[0];
+    const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+    const rowBelow = elemBelow ? elemBelow.closest('.task-row') : null;
+
+    if (rowBelow && rowBelow.dataset.id && parseInt(rowBelow.dataset.id) !== touchDragId) {
+      reorderTasks(touchDragId, parseInt(rowBelow.dataset.id));
+    }
+
+    touchDragId = null;
+    return;
+  }
+
+  // 不是拖拽（没有触发长按），啥也不做（正常 tap）
+  touchDragId = null;
+}
+
+// 首次触摸活跃列表时显示长按提示（仅一次）
+document.getElementById('activeList').addEventListener('touchstart', showLongpressHint, { once: true });
+
 // ========== 导出 / 导入 ==========
 function exportTasks() {
   const data = JSON.stringify(tasks, null, 2);
@@ -542,8 +756,8 @@ renderAll();
 // 首次使用，放两条示例
 if (tasks.length === 0) {
   tasks.push(
-    { id: Date.now(),       text: '👋 欢迎使用任务看板！点击右边的 ✓ 标记完成', completed: false, createdAt: Date.now(), completedAt: null },
-    { id: Date.now() + 100, text: '📝 这是一个示例任务，你可以删除我',           completed: false, createdAt: Date.now(), completedAt: null }
+    { id: Date.now(),       text: '👋 欢迎使用任务看板！长按可拖拽排序，右边 ✓ 标记完成', completed: false, createdAt: Date.now(), completedAt: null },
+    { id: Date.now() + 100, text: '📝 这是一个示例任务，右边的 ✕ 可删除',               completed: false, createdAt: Date.now(), completedAt: null }
   );
   save();
   renderAll();

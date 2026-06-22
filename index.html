@@ -309,6 +309,70 @@
     to   { transform: translateY(0); }
   }
 
+  /* ── 撤销提示条 ── */
+  .undo-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: #424242;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .undo-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  .undo-toast .undo-btn {
+    border: none;
+    background: #ffb74d;
+    color: #fff;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .undo-toast .undo-btn:hover {
+    background: #ffa726;
+  }
+  .undo-toast .undo-close {
+    border: none;
+    background: transparent;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 2px;
+    line-height: 1;
+    font-family: inherit;
+  }
+  .undo-toast .undo-close:hover {
+    color: #fff;
+  }
+  @media (max-width: 480px) {
+    .undo-toast {
+      bottom: 20px;
+      padding: 10px 16px;
+      font-size: 13px;
+      gap: 10px;
+    }
+  }
+
   /* ── 响应式 ── */
   @media (max-width: 480px) {
     body { padding: 16px 10px; }
@@ -535,26 +599,80 @@ function pinTask(id) {
 }
 
 function deleteTask(id) {
+  var deleted = tasks.filter(function(t) { return t.id === id; });
   tasks = tasks.filter(function(t) { return t.id !== id; });
   save();
   renderAll();
+  if (deleted.length > 0) showUndoToast(deleted);
 }
 
 function clearDone() {
   var done = tasks.filter(function(t) { return t.completed; });
   if (done.length === 0) return;
-  if (!confirm('确定要删除全部 ' + done.length + ' 条已完成任务吗？')) return;
   tasks = tasks.filter(function(t) { return !t.completed; });
   save();
   renderAll();
+  showUndoToast(done);
 }
 
 function clearAllTasks() {
   if (tasks.length === 0) return;
-  if (!confirm('确定要删除全部 ' + tasks.length + ' 条任务吗？此操作不可恢复！')) return;
+  var deleted = tasks.slice();
   tasks = [];
   save();
   renderAll();
+  showUndoToast(deleted);
+}
+
+// ========== 撤销系统 ==========
+var undoData = null;
+var undoTimer = null;
+
+function showUndoToast(deletedTasks) {
+  // 清除上一次的定时器
+  if (undoTimer) clearTimeout(undoTimer);
+  undoData = deletedTasks;
+
+  var toast = document.getElementById('undoToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'undoToast';
+    toast.className = 'undo-toast';
+    toast.innerHTML =
+      '<span class="undo-text"></span>' +
+      '<button class="undo-btn" onclick="undoDelete()">↩ 撤销</button>' +
+      '<button class="undo-close" onclick="dismissUndo()">✕</button>';
+    document.body.appendChild(toast);
+  }
+
+  var count = deletedTasks.length;
+  toast.querySelector('.undo-text').textContent =
+    '已删除 ' + count + ' 条任务';
+  toast.classList.add('show');
+
+  // 5 秒后自动消失
+  undoTimer = setTimeout(function() {
+    dismissUndo();
+  }, 5000);
+}
+
+function undoDelete() {
+  if (!undoData || undoData.length === 0) return;
+  // 恢复任务
+  for (var i = 0; i < undoData.length; i++) {
+    tasks.push(undoData[i]);
+  }
+  save();
+  renderAll();
+  dismissUndo();
+}
+
+function dismissUndo() {
+  if (undoTimer) clearTimeout(undoTimer);
+  undoTimer = null;
+  undoData = null;
+  var toast = document.getElementById('undoToast');
+  if (toast) toast.classList.remove('show');
 }
 
 // ========== 导出 / 导入 ==========
